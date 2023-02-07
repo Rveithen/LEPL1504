@@ -15,48 +15,65 @@ from scipy.integrate import solve_ivp
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 class MBSData:
-    """ Class to define the parameters of the double mass-spring model
-    and of the problem to solve.
-     
-    It contains the following fields (in SI units): 
+   """ Class to define the parameters of the double mass-spring model
+   and of the problem to solve.
     
-    general parameters:
-    -------------------
-    g:     Gravity
+   It contains the following fields (in SI units): 
+   
+   general parameters:
+   -------------------
+   g:     Gravity
+   
+   masses:
+   -------
+   m1:    Cart mass
+   m2:    Pendulum mass
+   
+   parameters of the pendulum:
+   ---------------------------
+   Lp:    Pendulum length
+   
+   parameter of the external force:
+   --------------------------------
+   Fmax:  Semi-amplitude of the force
+   f0:    Frequency at start
+   t0:    Time for specifying frequency at start
+   f1:    Frequency at end
+   t1:    Time for specifying frequency at end
+   
+   parameter of the controller:
+   ----------------------------
+   Kp:    Proportional factor
+   Kd:    Differential factor
+   
+   initial positions and velocities:
+   ---------------------------------
+   q1:    Initial position coordinate of the cart
+   q2:    Initial position coordinate of the pendulum
+   qd1:   Initial velocity coordinate of the cart
+   qd2:   Initial velocity coordinate of the pendulum
+   """
     
-    masses:
-    -------
-    m1:    Cart mass
-    m2:    Pendulum mass
-    
-    parameters of the pendulum:
-    ---------------------------
-    Lp:    Pendulum length
-    
-    parameter of the external force:
-    --------------------------------
-    Fmax:  Semi-amplitude of the force
-    f0:    Frequency at start
-    t0:    Time for specifying frequency at start
-    f1:    Frequency at end
-    t1:    Time for specifying frequency at end
-    
-    parameter of the controller:
-    ----------------------------
-    Kp:    Proportional factor
-    Kd:    Differential factor
-    
-    initial positions and velocities:
-    ---------------------------------
-    q1:    Initial position coordinate of the cart
-    q2:    Initial position coordinate of the pendulum
-    qd1:   Initial velocity coordinate of the cart
-    qd2:   Initial velocity coordinate of the pendulum
-    """
-    
-    def __init__(self):
-    # Write your code here
-    ............
+	
+   def __init__(self,m1,m2,Lp):
+      self.g = 9.81
+      self.m1 = m1
+      self.m2v= m2
+      self.Lp = Lp
+    		   
+      self.f0
+      self.t0
+      self.f1
+      self.t1
+    	   
+      self.Kp
+      self.Kd
+    	   
+      self.q1
+      self.q2
+      self.qd1
+      self.qd2
+      
         
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 def sweep(t, t0, f0, t1, f1, Fmax):
