@@ -151,7 +151,7 @@ def compute_dynamic_response(data):
     # Write some code here
     # ............
     fprime = lambda t, y: compute_derivatives(t, y, data)
-    result = solve_ivp(fprime, (data.t0, data.t1), np.array([data.q1, data.q2, data.qd1, data.qd2]), "DOP853")
+    result = solve_ivp(fprime, (data.t0, data.t1), np.array([data.q1, data.q2, data.qd1, data.qd2]))
 
     """file = ["dirdyn_q.res", "dirdyn_qd.res", "dirdyn_qdd.res"]"""
 
@@ -188,9 +188,12 @@ if __name__ == '__main__':
     sol = np.loadtxt("dirdyn_q.res")
     ref = np.loadtxt("dirdyn_positions_ref.res")
     plt.figure(figsize=(7, 4.5))
+    plt.subplot(2,1,1)
     plt.plot(sol[:, 0], sol[:, 1])
     plt.plot(ref[:, 0], ref[:, 1], "r.")
-    #plt.plot(ref[:, 0], ref[:, 2], "g. ")
+    plt.subplot(2,1,2)
+    plt.plot(ref[:, 0], ref[:, 2], "r. ")
+    plt.plot(sol[:, 0], (sol[:, 2]*pi)/180) #j'ai remis en mètre
 
     plt.xlabel("Temps[s]")
     plt.ylabel("Position[m]")
