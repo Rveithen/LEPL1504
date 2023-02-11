@@ -122,8 +122,8 @@ def compute_derivatives(t, y, data):
     M = np.array([[data.m1+data.m2,(data.m2*data.Lp/2)*cos(y[1])],[cos(y[1]),2*data.Lp/3]])
     C = np.array([-(1/2)*data.m2*data.Lp*sin(y[1])*y[3]**2,0])
     Q = np.array([sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax),data.g*sin(y[1])])
-    qdd = np.linalg.solve(M, Q-C)
-    yd[2],yd[3] = qdd[0],qdd[1]
+	
+    yd[2:] = np.linalg.solve(M, Q-C)
     return yd
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
