@@ -132,12 +132,13 @@ def compute_dynamic_response(data):
          for the given data. Initial and final time are determined
          by the t0 and t1 parameter of the parameter data structure.
          Results are saved to three text files named dirdyn_q.res, dirdyn_qd.res and dirdyn_qdd.res
-
+ 
         Time evolution is computed using an time integrator (typically Runge-Kutta).
-
+ 
        :param data: the MBSData object containing the parameters of the model
      """
     # Write your code here
+    #............
     # ### Runge Kutta ###   should be called via solve_ivp()
     # to pass the MBSData object to compute_derivative function in solve_ivp, you may use lambda mechanism:
     #
@@ -148,12 +149,32 @@ def compute_dynamic_response(data):
     # Note that you can change the tolerances with rtol and atol options (see online solve_iv doc)
     #
     # Write some code here
+    #............
+    fprime = lambda t,y: compute_derivatives(t, y, data)
+    result = solve_ivp(fprime, (data.t0,data.t1), np.array([data.q1,data.q2,data.qd1,data.qd2]))
+    
+    file = ["dirdyn_q.res","dirdyn_qd.res","dirdyn_qdd.res"]
+    q1 = result.y[0]
+    q2 = result.y[1]
+    qd1 = result.y[2]
+    qd2 = result.y[3] 
+    """qdd1 = yd[2]
+    qdd2 = yd[3]"""
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # Main function
 
 if __name__ == '__main__':
-    mbs_data = MBSData()
-
+    mbs_data = MBSData(1,0.5,1)
+    mbs_data.Fmax = 500
+    mbs_data.f0 = 1
+    mbs_data.f1 = 10
+    mbs_data.t0 = 0
+    mbs_data.t1 = 10
+    mbs_data.q1 = 0
+    mbs_data.q2 = 30
+    mbs_data.qd1 = 0
+    mbs_data.qd2 = 0
+    
     compute_dynamic_response(mbs_data)
