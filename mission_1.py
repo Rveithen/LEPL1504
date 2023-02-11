@@ -54,18 +54,19 @@ class MBSData:
    qd2:   Initial velocity coordinate of the pendulum
    """
     
-	
    def __init__(self,m1,m2,Lp):
+       
       self.g = 9.81
       self.m1 = m1
-      self.m2v= m2
+      self.m2 = m2
       self.Lp = Lp
-    		   
+      
+      self.Fmax
       self.f0
-      self.t0
       self.f1
+      self.t0
       self.t1
-    	   
+      
       self.Kp
       self.Kd
     	   
@@ -91,8 +92,10 @@ def sweep(t, t0, f0, t1, f1, Fmax):
 		
 	:return Fext: the value of the sweep function.
     """
+    # Write your code here
+    theta = 2*pi*t*(f0 + (t/2 * ((f1-f0)/(t1-t0))))
+    return Fmax*sin(theta)
     
-    return Fmax*sin(2*pi*(f0*(((f1-f0)/(t1-t0))*(t/2))*t))
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *    
@@ -114,9 +117,15 @@ def compute_derivatives(t, y, data):
         :param data: the MBSData object containing the parameters of the model
     """                 
     # Write your code here
-    ............    
+    #............    
     # sweep function should be called here: sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
-
+    yd = np.array([y[2],y[3],0,0])
+    M = np.array([[data.m1+data.m2,(data.m2*data.Lp/2)*cos(y[1])],[cos(y[1]),2*data.Lp/3]])
+    C = np.array([-(1/2)*data.m2*data.Lp*sin(y[1])*y[3]**2,0])
+    Q = np.array([sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax),data.g*sin(y[1])])
+    qdd = np.linalg.solve(M, Q-C)
+    yd[2],yd[3] = qdd[0],qdd[1]
+    return yd
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 def compute_dynamic_response(data):
@@ -130,7 +139,7 @@ def compute_dynamic_response(data):
        :param data: the MBSData object containing the parameters of the model
      """
     # Write your code here
-    ............
+    #............
     # ### Runge Kutta ###   should be called via solve_ivp()
     # to pass the MBSData object to compute_derivative function in solve_ivp, you may use lambda mechanism:
     #
@@ -141,7 +150,7 @@ def compute_dynamic_response(data):
     # Note that you can change the tolerances with rtol and atol options (see online solve_iv doc)
     #
     # Write some code here
-    ............
+    #............
   
 
 
