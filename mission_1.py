@@ -60,6 +60,7 @@ class MBSData:
         self.m2 = 0.5
         self.Lp = 1  # m
 
+        self.Fmax = 0
         self.f0 = 1  # Hz
         self.t0 = 0  # s
         self.f1 = 10
@@ -90,8 +91,10 @@ def sweep(t, t0, f0, t1, f1, Fmax):
 
 	:return Fext: the value of the sweep function.
     """
-
-    return Fmax * sin(2 * pi * (f0 * (((f1 - f0) / (t1 - t0)) * (t / 2)) * t))
+    # Write your code here
+    theta = 2*pi*t*(f0 + (t/2 * ((f1-f0)/(t1-t0))))
+    return Fmax*sin(theta)
+    
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -111,12 +114,17 @@ def compute_derivatives(t, y, data):
         :param  y: the numpy array containing the states
         :return: yd a numpy array containing the states derivatives  yd = [qd1, qd2, qdd1, qdd2]
         :param data: the MBSData object containing the parameters of the model
-    """
-
-    qdd1 = y.qd1[t + 1] - y.qd1[t]
-    qdd2 = y.qd2[t + 1] - y.qd2[t]
-    sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
-
+    """                 
+    # Write your code here
+    #............    
+    # sweep function should be called here: sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
+    yd = np.array([y[2],y[3],0,0])
+    M = np.array([[data.m1+data.m2,(data.m2*data.Lp/2)*cos(y[1])],[cos(y[1]),2*data.Lp/3]])
+    C = np.array([-(1/2)*data.m2*data.Lp*sin(y[1])*y[3]**2,0])
+    Q = np.array([sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax),data.g*sin(y[1])])
+    qdd = np.linalg.solve(M, Q-C)
+    yd[2],yd[3] = qdd[0],qdd[1]
+    return yd
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 def compute_dynamic_response(data):
@@ -130,7 +138,6 @@ def compute_dynamic_response(data):
        :param data: the MBSData object containing the parameters of the model
      """
     # Write your code here
-
     # ### Runge Kutta ###   should be called via solve_ivp()
     # to pass the MBSData object to compute_derivative function in solve_ivp, you may use lambda mechanism:
     #
