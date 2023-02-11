@@ -118,9 +118,9 @@ def compute_derivatives(t, y, data):
     # ............
     # sweep function should be called here: sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
     yd = np.array([y[2], y[3], 0, 0])
-    M = np.array([[data.m1 + data.m2, (data.m2 * data.Lp / 2) * cos(y[1])], [cos(y[1]), 2 * data.Lp / 3]])
+    M = np.array([[data.m1 + data.m2, (data.m2 * data.Lp / 2) * cos(y[1])], [cos(y[1])*data.m2, data.m2 * 2 * data.Lp / 3]])
     C = np.array([-(1 / 2) * data.m2 * data.Lp * sin(y[1]) * y[3] ** 2, 0])
-    Q = np.array([sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax), data.g * sin(y[1])])
+    Q = np.array([sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax), data.m2* data.g * sin(y[1])])
 
     yd[2:] = np.linalg.solve(M, Q - C)
     return yd
@@ -151,7 +151,7 @@ def compute_dynamic_response(data):
     # Write some code here
     # ............
     fprime = lambda t, y: compute_derivatives(t, y, data)
-    result = solve_ivp(fprime, (data.t0, data.t1), np.array([data.q1, data.q2, data.qd1, data.qd2]))
+    result = solve_ivp(fprime, (data.t0, data.t1), np.array([data.q1, data.q2, data.qd1, data.qd2]), "DOP853", )
 
     """file = ["dirdyn_q.res", "dirdyn_qd.res", "dirdyn_qdd.res"]"""
 
@@ -179,7 +179,7 @@ if __name__ == '__main__':
     mbs_data.t0 = 0
     mbs_data.t1 = 10
     mbs_data.q1 = 0
-    mbs_data.q2 = 30
+    mbs_data.q2 = 30*pi/180
     mbs_data.qd1 = 0
     mbs_data.qd2 = 0
 
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     plt.plot(ref[:, 0], ref[:, 1], "r.")
     plt.subplot(2,1,2)
     plt.plot(ref[:, 0], ref[:, 2], "r. ")
-    plt.plot(sol[:, 0], (sol[:, 2]*pi)/180) #j'ai remis en mètre
+    plt.plot(sol[:, 0], sol[:, 2])
 
     plt.xlabel("Temps[s]")
     plt.ylabel("Position[m]")
