@@ -54,25 +54,25 @@ class MBSData:
     qd2:   Initial velocity coordinate of the pendulum
     """
 
-    def __init__(self):
+    def __init__(self,m1,m2,Lp):
         self.g = 9.81
-        self.m1 = 1  # kg
-        self.m2 = 0.5
-        self.Lp = 1  # m
+        self.m1 = m1  # kg
+        self.m2 = m2
+        self.Lp = Lp  # m
 
-        self.Fmax = 0
-        self.f0 = 1  # Hz
-        self.t0 = 0  # s
-        self.f1 = 10
-        self.t1 = 10
+        self.Fmax = None
+        self.f0 = None  # Hz
+        self.t0 = None  # s
+        self.f1 = None
+        self.t1 = None
 
-        self.Kp = 0
-        self.Kd = 0
+        self.Kp = None
+        self.Kd = None
 
-        self.q1 = 0  # m
-        self.q2 = 30  # degrees
-        self.qd1 = 0  # m/s
-        self.qd2 = 0
+        self.q1 = None  # m
+        self.q2 = None  # degrees
+        self.qd1 = None  # m/s
+        self.qd2 = None
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
