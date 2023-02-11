@@ -151,7 +151,7 @@ def compute_dynamic_response(data):
     # Write some code here
     # ............
     fprime = lambda t, y: compute_derivatives(t, y, data)
-    result = solve_ivp(fprime, (data.t0, data.t1), np.array([data.q1, data.q2, data.qd1, data.qd2]))
+    result = solve_ivp(fprime, (data.t0, data.t1), np.array([data.q1, data.q2, data.qd1, data.qd2]), "DOP853")
 
     """file = ["dirdyn_q.res", "dirdyn_qd.res", "dirdyn_qdd.res"]"""
 
@@ -160,20 +160,20 @@ def compute_dynamic_response(data):
     qd1 = result.y[2]
     qd2 = result.y[3]
 
-    np.savetxt("dirdyn_q.res", [q1, q2])
-    np.savetxt("dirdyn_qd.res", [qd1, qd2])
+    np.savetxt("dirdyn_q.res", np.array([result.t, q1, q2]).transpose())
+    np.savetxt("dirdyn_qd.res", np.array([result.t, qd1, qd2]).transpose())
 
-    res = compute_derivatives(data.t0,[data.q1, data.q2, data.qd1, data.qd2],data)
+    """res = compute_derivatives(data.t0,[data.q1, data.q2, data.qd1, data.qd2],data)
     qdd1 = res[2]
     qdd2 = res[3]
-    np.savetxt("dirdyn_qdd.res", [qdd1, qdd2])
+    np.savetxt("dirdyn_qdd.res", [qdd1, qdd2])"""
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # Main function
 
 if __name__ == '__main__':
     mbs_data = MBSData(1, 0.5, 1)
-    mbs_data.Fmax = 500
+    mbs_data.Fmax = 0.5
     mbs_data.f0 = 1
     mbs_data.f1 = 10
     mbs_data.t0 = 0
@@ -188,8 +188,10 @@ if __name__ == '__main__':
     sol = np.loadtxt("dirdyn_q.res")
     ref = np.loadtxt("dirdyn_positions_ref.res")
     plt.figure(figsize=(7, 4.5))
-    plt.plot(sol[:, 0], sol[:, 6])
+    plt.plot(sol[:, 0], sol[:, 1])
     plt.plot(ref[:, 0], ref[:, 1], "r.")
+    #plt.plot(ref[:, 0], ref[:, 2], "g. ")
+
     plt.xlabel("Temps[s]")
     plt.ylabel("Position[m]")
     plt.legend(["Solution du programme","Reference"])
