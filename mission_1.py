@@ -11,7 +11,7 @@
 from math import sin, cos, pi
 import numpy as np
 from scipy.integrate import solve_ivp
-
+import matplotlib.pyplot as plt
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 class MBSData:
@@ -54,7 +54,7 @@ class MBSData:
     qd2:   Initial velocity coordinate of the pendulum
     """
 
-    def __init__(self,m1,m2,Lp):
+    def __init__(self, m1, m2, Lp):
         self.g = 9.81
         self.m1 = m1  # kg
         self.m2 = m2
@@ -92,9 +92,8 @@ def sweep(t, t0, f0, t1, f1, Fmax):
 	:return Fext: the value of the sweep function.
     """
     # Write your code here
-    theta = 2*pi*t*(f0 + (t/2 * ((f1-f0)/(t1-t0))))
-    return Fmax*sin(theta)
-    
+    theta = 2 * pi * t * (f0 + (t / 2 * ((f1 - f0) / (t1 - t0))))
+    return Fmax * sin(theta)
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -114,17 +113,18 @@ def compute_derivatives(t, y, data):
         :param  y: the numpy array containing the states
         :return: yd a numpy array containing the states derivatives  yd = [qd1, qd2, qdd1, qdd2]
         :param data: the MBSData object containing the parameters of the model
-    """                 
+    """
     # Write your code here
-    #............    
+    # ............
     # sweep function should be called here: sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
-    yd = np.array([y[2],y[3],0,0])
-    M = np.array([[data.m1+data.m2,(data.m2*data.Lp/2)*cos(y[1])],[cos(y[1]),2*data.Lp/3]])
-    C = np.array([-(1/2)*data.m2*data.Lp*sin(y[1])*y[3]**2,0])
-    Q = np.array([sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax),data.g*sin(y[1])])
-	
-    yd[2:] = np.linalg.solve(M, Q-C)
+    yd = np.array([y[2], y[3], 0, 0])
+    M = np.array([[data.m1 + data.m2, (data.m2 * data.Lp / 2) * cos(y[1])], [cos(y[1]), 2 * data.Lp / 3]])
+    C = np.array([-(1 / 2) * data.m2 * data.Lp * sin(y[1]) * y[3] ** 2, 0])
+    Q = np.array([sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax), data.g * sin(y[1])])
+
+    yd[2:] = np.linalg.solve(M, Q - C)
     return yd
+
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 def compute_dynamic_response(data):
@@ -132,13 +132,13 @@ def compute_dynamic_response(data):
          for the given data. Initial and final time are determined
          by the t0 and t1 parameter of the parameter data structure.
          Results are saved to three text files named dirdyn_q.res, dirdyn_qd.res and dirdyn_qdd.res
- 
+
         Time evolution is computed using an time integrator (typically Runge-Kutta).
- 
+
        :param data: the MBSData object containing the parameters of the model
      """
     # Write your code here
-    #............
+    # ............
     # ### Runge Kutta ###   should be called via solve_ivp()
     # to pass the MBSData object to compute_derivative function in solve_ivp, you may use lambda mechanism:
     #
@@ -149,24 +149,30 @@ def compute_dynamic_response(data):
     # Note that you can change the tolerances with rtol and atol options (see online solve_iv doc)
     #
     # Write some code here
-    #............
-    fprime = lambda t,y: compute_derivatives(t, y, data)
-    result = solve_ivp(fprime, (data.t0,data.t1), np.array([data.q1,data.q2,data.qd1,data.qd2]))
-    
-    file = ["dirdyn_q.res","dirdyn_qd.res","dirdyn_qdd.res"]
+    # ............
+    fprime = lambda t, y: compute_derivatives(t, y, data)
+    result = solve_ivp(fprime, (data.t0, data.t1), np.array([data.q1, data.q2, data.qd1, data.qd2]))
+
+    """file = ["dirdyn_q.res", "dirdyn_qd.res", "dirdyn_qdd.res"]"""
+
     q1 = result.y[0]
     q2 = result.y[1]
     qd1 = result.y[2]
-    qd2 = result.y[3] 
-    """qdd1 = yd[2]
-    qdd2 = yd[3]"""
+    qd2 = result.y[3]
 
+    np.savetxt("dirdyn_q.res", [q1, q2])
+    np.savetxt("dirdyn_qd.res", [qd1, qd2])
+
+    res = compute_derivatives(data.t0,[data.q1, data.q2, data.qd1, data.qd2],data)
+    qdd1 = res[2]
+    qdd2 = res[3]
+    np.savetxt("dirdyn_qdd.res", [qdd1, qdd2])
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # Main function
 
 if __name__ == '__main__':
-    mbs_data = MBSData(1,0.5,1)
+    mbs_data = MBSData(1, 0.5, 1)
     mbs_data.Fmax = 500
     mbs_data.f0 = 1
     mbs_data.f1 = 10
@@ -176,5 +182,15 @@ if __name__ == '__main__':
     mbs_data.q2 = 30
     mbs_data.qd1 = 0
     mbs_data.qd2 = 0
-    
+
     compute_dynamic_response(mbs_data)
+
+    sol = np.loadtxt("dirdyn_q.res")
+    ref = np.loadtxt("dirdyn_positions_ref.res")
+    plt.figure(figsize=(7, 4.5))
+    plt.plot(sol[:, 0], sol[:, 6])
+    plt.plot(ref[:, 0], ref[:, 1], "r.")
+    plt.xlabel("Temps[s]")
+    plt.ylabel("Position[m]")
+    plt.legend(["Solution du programme","Reference"])
+    plt.show()
