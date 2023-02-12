@@ -103,7 +103,7 @@ def stabilize(y,data):
         
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *    
-def compute_derivatives(t, y, data):
+def compute_derivatives(t, y, data, stabilizer = False):
     """ Compute the derivatives yd for a given state y of the system.
         The derivatives are computed at the given time t with
         the parameters values in the given data structure.
@@ -119,8 +119,12 @@ def compute_derivatives(t, y, data):
         :param  y: the numpy array containing the states 
         :return: yd a numpy array containing the states derivatives  yd = [qd1, qd2, qdd1, qdd2]
         :param data: the MBSData object containing the parameters of the model
-    """                 
-    F = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
+    """
+    if(stabilizer == False):
+        F = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
+    else:
+        F = stabilize(y, data)
+        
     cost = cos(y[1])
     sint = sin(y[1])
     q2ds = y[3] * y[3]
@@ -133,25 +137,7 @@ def compute_derivatives(t, y, data):
     
     yd = np.array([y[2], y[3], qdd[0], qdd[1]])
     
-    return yd
-
-# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-def compute_derivates_stabilize(t, y, data):
-    F = stabilize(y, data)
-    cost = cos(y[1])
-    sint = sin(y[1])
-    q2ds = y[3] * y[3]
-    Ls = data.Lp * data.Lp
-    
-    M = np.array([[data.m1 + data.m2 , data.m2 * data.Lp * cost /2], [cost, 2 * data.Lp /3]])
-    Q_c = np.array([F + (data.m2 * Ls * q2ds * sint/2), data.g *sint])
-    
-    qdd = np.linalg.solve(M,Q_c)
-    
-    yd = np.array([y[2], y[3], qdd[0], qdd[1]])
-    
-    return yd
-    
+    return yd    
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -176,10 +162,7 @@ def compute_dynamic_response(data,stabilizer = False):
     # Note that you can change the tolerances with rtol and atol options (see online solve_iv doc)
     #
     # Write some code here
-    if(stabilizer == False) :
-        fprime = lambda t,y: compute_derivatives(t, y, data)
-    else :
-        fprime = lambda t,y: compute_derivates_stabilize(t, y, data)
+    fprime = lambda t,y: compute_derivatives(t, y, data,stabilizer)
     
     t = np.linspace(data.t0, data.t1, 1001)
     
