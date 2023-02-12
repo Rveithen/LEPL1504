@@ -69,8 +69,8 @@ class MBSData:
         self.f1 = 10
         self.t1 = 10
           	   
-        self.Kp = 1
-        self.Kd = 1
+        self.Kp = 10000
+        self.Kd = 100
           	   
         self.q1 = 0
         self.q2 = pi/6
@@ -95,7 +95,12 @@ def sweep(t, t0, f0, t1, f1, Fmax):
 	:return Fext: the value of the sweep function.
     """
     return Fmax * sin(2 * pi * t * (f0 + t * (f1-f0) / (2 * (t1-t0))))
+
+# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+def stabilize(y,data):
     
+    return data.Kp * y[1] + data.Kd * y[3]
+        
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *    
 def compute_derivatives(t, y, data):
@@ -130,9 +135,27 @@ def compute_derivatives(t, y, data):
     
     return yd
 
+# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+def compute_derivates_stabilize(t, y, data):
+    F = stabilize(y, data)
+    cost = cos(y[1])
+    sint = sin(y[1])
+    q2ds = y[3] * y[3]
+    Ls = data.Lp * data.Lp
+    
+    M = np.array([[data.m1 + data.m2 , data.m2 * data.Lp * cost /2], [cost, 2 * data.Lp /3]])
+    Q_c = np.array([F + (data.m2 * Ls * q2ds * sint/2), data.g *sint])
+    
+    qdd = np.linalg.solve(M,Q_c)
+    
+    yd = np.array([y[2], y[3], qdd[0], qdd[1]])
+    
+    return yd
+    
+
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-def compute_dynamic_response(data):
+def compute_dynamic_response(data,stabilizer = False):
     """  Compute the time evolution of the dynamic response of the cart-pendulum system
          for the given data. Initial and final time are determined
          by the t0 and t1 parameter of the parameter data structure.
@@ -153,7 +176,10 @@ def compute_dynamic_response(data):
     # Note that you can change the tolerances with rtol and atol options (see online solve_iv doc)
     #
     # Write some code here
-    fprime = lambda t,y: compute_derivatives(t, y, data)
+    if(stabilizer == False) :
+        fprime = lambda t,y: compute_derivatives(t, y, data)
+    else :
+        fprime = lambda t,y: compute_derivates_stabilize(t, y, data)
     
     t = np.linspace(data.t0, data.t1, 1001)
     
@@ -207,4 +233,21 @@ if __name__ == '__main__':
     plt.ylabel("Position[deg]")
     
     plt.legend(["Solution du programme","Reference"])
+    plt.show()
+    
+    plt.figure(figsize=(9, 9))    
+    compute_dynamic_response(mbs_data,True)
+    
+    sol = np.loadtxt("dirdyn_q.res")
+    plt.subplot(2,1,1)
+    plt.plot(sol[:, 0], sol[:, 1])
+    plt.xlabel("Temps[s]")
+    plt.ylabel("Position[m]")
+    
+    plt.subplot(2,1,2)
+    plt.plot(sol[:, 0],180/pi * sol[:, 2])
+    plt.xlabel("Temps[s]")
+    plt.ylabel("Position[deg]")
+    
+    plt.legend("Solution du programme avec stabilisateur")
     plt.show()
