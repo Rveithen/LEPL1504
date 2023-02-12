@@ -155,11 +155,11 @@ def compute_dynamic_response(data):
     # Write some code here
     fprime = lambda t,y: compute_derivatives(t, y, data)
     
-    t = np.linspace(data.t0, data.t1, 101)
+    t = np.linspace(data.t0, data.t1, 1001)
     
     y = np.array([data.q1, data.q2, data.qd1, data.qd2])
     
-    h = solve_ivp(fprime, [data.t0, data.t1], y, t_eval=t, method='RK23')
+    h = solve_ivp(fprime, [data.t0, data.t1], y, t_eval=t, method='Radau')
     
     q1 = h.y[0]
     q2 = h.y[1]
