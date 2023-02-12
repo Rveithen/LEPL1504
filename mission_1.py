@@ -11,6 +11,7 @@
 from math import sin, cos, pi
 import numpy as np
 from scipy.integrate import solve_ivp
+import matplotlib.pyplot as plt
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -54,27 +55,27 @@ class MBSData:
     qd2:   Initial velocity coordinate of the pendulum
     """
     
-    def __init__(self):
+    def __init__(self,m1,m2,Lp):
         self.g = 9.81
         
-        self.m1 = 1
-        self.m2 = 0.5
+        self.m1 = m1
+        self.m2 = m2
         
-        self.Lp = 1
+        self.Lp = Lp
         
-        self.Fmax = 0.5  		   
-        self.f0 = 1
-        self.t0 = 0
-        self.f1 = 10
-        self.t1 = 10
+        self.Fmax = None  		   
+        self.f0 = None
+        self.t0 = None
+        self.f1 = None
+        self.t1 = None
           	   
-        self.Kp = 1
-        self.Kd = 1
+        self.Kp = None
+        self.Kd = None
           	   
-        self.q1 = 0
-        self.q2 = pi/6
-        self.qd1 = 0
-        self.qd2 = 0
+        self.q1 = None
+        self.q2 = None
+        self.qd1 = None
+        self.qd2 = None
     
         
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -114,19 +115,12 @@ def compute_derivatives(t, y, data):
         :return: yd a numpy array containing the states derivatives  yd = [qd1, qd2, qdd1, qdd2]
         :param data: the MBSData object containing the parameters of the model
     """                 
-    F = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
-    cost = cos(y[1])
-    sint = sin(y[1])
-    q2ds = y[3] * y[3]
-    Ls = data.Lp * data.Lp
-    
-    M = np.array([[data.m1 + data.m2 , data.m2 * data.Lp * cost /2], [cost, 2 * data.Lp /3]])
-    Q_c = np.array([F + (data.m2 * Ls * q2ds * sint/2), data.g *sint])
-    
-    qdd = np.linalg.solve(M,Q_c)
-    
-    yd = np.array([y[2], y[3], qdd[0], qdd[1]])
-    
+    yd = np.array([y[2], y[3], 0, 0])
+    M = np.array([[data.m1 + data.m2, (data.m2 * data.Lp / 2) * cos(y[1])], [cos(y[1])*data.m2, data.m2 * 2 * data.Lp / 3]])
+    C = np.array([-(1 / 2) * data.m2 * data.Lp * sin(y[1]) * y[3] ** 2, 0])
+    Q = np.array([sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax), data.m2* data.g * sin(y[1])])
+
+    yd[2:] = np.linalg.solve(M, Q - C)
     return yd
 
 
@@ -158,7 +152,7 @@ def compute_dynamic_response(data):
     
     y = np.array([data.q1, data.q2, data.qd1, data.qd2])
     
-    h = solve_ivp(fprime, [data.t0, data.t1], y, t_eval=t, method='RK23')
+    h = solve_ivp(fprime, [data.t0, data.t1], y, t_eval=t, method='Radau')
     
     q1 = h.y[0]
     q2 = h.y[1]
@@ -184,6 +178,7 @@ def compute_dynamic_response(data):
 # Main function
 
 if __name__ == '__main__':
+    
     mbs_data = MBSData(1, 0.5, 1)
     mbs_data.Fmax = 0.5
     mbs_data.f0 = 1
@@ -199,15 +194,19 @@ if __name__ == '__main__':
 
     sol = np.loadtxt("dirdyn_q.res")
     ref = np.loadtxt("dirdyn_positions_ref.res")
-    plt.figure(figsize=(7, 4.5))
+    plt.figure(figsize=(9, 9))
+    
     plt.subplot(2,1,1)
     plt.plot(sol[:, 0], sol[:, 1])
     plt.plot(ref[:, 0], ref[:, 1], "r.")
-    plt.subplot(2,1,2)
-    plt.plot(ref[:, 0], ref[:, 2], "r. ")
-    plt.plot(sol[:, 0], sol[:, 2])
-
     plt.xlabel("Temps[s]")
     plt.ylabel("Position[m]")
+    
+    plt.subplot(2,1,2)
+    plt.plot(ref[:, 0],180/pi * ref[:, 2], "r. ")
+    plt.plot(sol[:, 0],180/pi * sol[:, 2])
+    plt.xlabel("Temps[s]")
+    plt.ylabel("Position[deg]")
+    
     plt.legend(["Solution du programme","Reference"])
     plt.show()
